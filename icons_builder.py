@@ -3,7 +3,7 @@ import glob
 import sys, getopt, subprocess
 import os.path
 import os
-
+import glob
 
 
 def main(argv):
@@ -13,8 +13,10 @@ def main(argv):
 	color = None
 	dest = '.'
 	dp = 24
+	padding = 0
+	file_name = None
 	try:
-		opts, args = getopt.getopt(argv,"h",['dp=','color=','dest='])
+		opts, args = getopt.getopt(argv,"h",['size=','color=','padding=','name=','dest='])
 	except getopt.GetoptError:
 		print './change.py [-h] [--dp dp-value] [--color color] [--dest dest_dir] <image_path>'
 		sys.exit(2)
@@ -26,10 +28,15 @@ def main(argv):
 			color = arg
 		if opt == '--dest':
 			dest = arg
-		if opt == '--dp':
+		if opt == '--size':
 			dp = float(arg)
+		if opt == '--padding':
+			padding = int(arg)
+		if opt == '--name':
+			file_name = arg
 	if len(args)>0:
 		image_path = args[0]
+	if file_name == None:
 		file_name = os.path.basename(image_path)
 
 	temp_dir = '.temp_res'
@@ -41,9 +48,17 @@ def main(argv):
 		sub_dir  = 'drawable-'+suffix
 		subprocess.call(['mkdir', sub_dir], cwd=temp_dir)
 		subprocess.call(['convert', image_path, '-resize', str(px)+'x'+str(px), file_name], cwd=temp_dir+'/'+sub_dir)
+		if padding>0:
+			padding = int(padding*ratio)
+			subprocess.call(['convert',file_name,'-background','transparent','-gravity', 'center', '-extent', str(px+padding)+'x'+str(px+padding),file_name], cwd=temp_dir+'/'+sub_dir)
 		if color<>None:
 			subprocess.call(['convert',file_name,'-alpha','extract','-background',color,'-alpha','shape',file_name], cwd=temp_dir+'/'+sub_dir)
-	subprocess.call('mv '+temp_dir+' '+dest+'/res', shell=True)
+
+
+	if len(glob.glob(dest+'/res')) == 0 :
+		subprocess.call('rsync -a '+temp_dir+'/ '+dest+'/res', shell=True)
+	else:
+		subprocess.call('rsync -a '+temp_dir+'/ '+dest+'/res\('+str(len(glob.glob(dest+'/res(*)'))+1)+'\)', shell=True)
 
 
 			

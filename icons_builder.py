@@ -29,7 +29,7 @@ def main(argv):
 		if opt == '--dest':
 			dest = arg
 		if opt == '--size':
-			dp = float(arg)
+			dp = int(arg)
 		if opt == '--padding':
 			padding = int(arg)
 		if opt == '--name':
@@ -49,8 +49,8 @@ def main(argv):
 		subprocess.call(['mkdir', sub_dir], cwd=temp_dir)
 		subprocess.call(['convert', image_path, '-resize', str(px)+'x'+str(px), file_name], cwd=temp_dir+'/'+sub_dir)
 		if padding>0:
-			padding = int(padding*ratio)
-			subprocess.call(['convert',file_name,'-background','transparent','-gravity', 'center', '-extent', str(px+padding)+'x'+str(px+padding),file_name], cwd=temp_dir+'/'+sub_dir)
+			new_padding = int(padding*ratio)
+			subprocess.call(['convert',file_name,'-background','transparent','-gravity', 'center', '-extent', str(px+new_padding)+'x'+str(px+new_padding),file_name], cwd=temp_dir+'/'+sub_dir)
 		if color<>None:
 			subprocess.call(['convert',file_name,'-alpha','extract','-background',color,'-alpha','shape',file_name], cwd=temp_dir+'/'+sub_dir)
 

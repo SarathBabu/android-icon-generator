@@ -5,6 +5,8 @@ import os.path
 import os
 import glob
 
+command_format = './change.py [-h] [--size size] [--padding dp-value] [--name name] [--color color] [--dest dest_dir] <image_path>'
+
 
 def main(argv):
 
@@ -17,12 +19,13 @@ def main(argv):
 	file_name = None
 	try:
 		opts, args = getopt.getopt(argv,"h",['size=','color=','padding=','name=','dest='])
-	except getopt.GetoptError:
-		print './change.py [-h] [--dp dp-value] [--color color] [--dest dest_dir] <image_path>'
+	except getopt.GetoptError as e:
+		print e
+		print command_format
 		sys.exit(2)
 	for opt, arg in opts:
 		if opt == '-h':
-			print './change.py [-h] [--color color] [--dest dest_dir] <image_path>'
+			print command_format
 			sys.exit()
 		if opt == '--color':
 			color = arg
@@ -54,11 +57,7 @@ def main(argv):
 		if color<>None:
 			subprocess.call(['convert',file_name,'-alpha','extract','-background',color,'-alpha','shape',file_name], cwd=temp_dir+'/'+sub_dir)
 
-
-	if len(glob.glob(dest+'/res')) == 0 :
-		subprocess.call('rsync -a '+temp_dir+'/ '+dest+'/res', shell=True)
-	else:
-		subprocess.call('rsync -a '+temp_dir+'/ '+dest+'/res\('+str(len(glob.glob(dest+'/res(*)'))+1)+'\)', shell=True)
+	subprocess.call('rsync -a '+temp_dir+'/ '+dest+'/res\('+str(len(glob.glob(dest+'/res(*)'))+1)+'\)', shell=True)
 
 
 			

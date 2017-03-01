@@ -5,7 +5,7 @@ import os.path
 import os
 import glob
 
-command_format = './change.py [-h] [--size size] [--padding dp-value] [--name name] [--color color] [--dest dest_dir] <image_path>'
+command_format = './icons_builder.py [-h] [--size size] [--padding dp-value] [--name name] [--color color] [--dest dest_dir] <image_path>'
 
 
 def main(argv):
@@ -22,7 +22,7 @@ def main(argv):
 	except getopt.GetoptError as e:
 		print e
 		print command_format
-		sys.exit(2)
+		return
 	for opt, arg in opts:
 		if opt == '-h':
 			print command_format
@@ -36,11 +36,15 @@ def main(argv):
 		if opt == '--padding':
 			padding = int(arg)
 		if opt == '--name':
-			file_name = arg
+			file_name = arg+'.png'
 	if len(args)>0:
 		image_path = args[0]
 	if file_name == None:
 		file_name = os.path.basename(image_path)
+
+	if os.path.isfile(image_path) == False:
+		print '"'+image_path+'" is not a file'
+		return
 
 	temp_dir = '.temp_res'
 	subprocess.call('rm -rf '+temp_dir, shell=True)		
@@ -50,14 +54,16 @@ def main(argv):
 		px = int(dp*ratio)
 		sub_dir  = 'drawable-'+suffix
 		subprocess.call(['mkdir', sub_dir], cwd=temp_dir)
-		subprocess.call(['convert', image_path, '-resize', str(px)+'x'+str(px), file_name], cwd=temp_dir+'/'+sub_dir)
 		if padding>0:
 			new_padding = int(padding*ratio)
-			subprocess.call(['convert',file_name,'-background','transparent','-gravity', 'center', '-extent', str(px+new_padding)+'x'+str(px+new_padding),file_name], cwd=temp_dir+'/'+sub_dir)
+			subprocess.call(['convert', image_path, '-resize', str(px-new_padding)+'x'+str(px-new_padding), file_name], cwd=temp_dir+'/'+sub_dir)
+			subprocess.call(['convert',file_name,'-background','transparent','-gravity', 'center', '-extent', str(px)+'x'+str(px),file_name], cwd=temp_dir+'/'+sub_dir)
+		else:
+			subprocess.call(['convert', image_path, '-resize', str(px)+'x'+str(px), file_name], cwd=temp_dir+'/'+sub_dir)
 		if color<>None:
 			subprocess.call(['convert',file_name,'-alpha','extract','-background',color,'-alpha','shape',file_name], cwd=temp_dir+'/'+sub_dir)
 
-	subprocess.call('rsync -a '+temp_dir+'/ '+dest+'/res\('+str(len(glob.glob(dest+'/res(*)'))+1)+'\)', shell=True)
+	subprocess.call('rsync -a '+temp_dir+'/ '+dest+'/res\('+str(len(glob.glob(dest+'/res*'))+1)+'\)', shell=True)
 
 
 			
